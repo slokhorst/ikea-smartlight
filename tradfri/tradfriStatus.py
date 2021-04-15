@@ -25,42 +25,29 @@ import subprocess
 coap = 'coap-client'
 timeout = 5
 
+def call_coap(hubip, apiuser, apikey, method, path, timeout):
+    tradfriHub = 'coaps://{}:5684{}'.format(hubip, path)
+    command = '{} -m {} -u "{}" -k "{}" -B {} "{}"'.format(coap, method, apiuser, apikey, timeout, tradfriHub)
+    result_json = subprocess.check_output(command, shell=True)
+    return json.loads(result_json.decode().strip('\n').split('\n')[-1])
+
+
 def tradfri_get_devices(hubip, apiuser, apikey):
     """ function for getting all tradfri device ids """
-    tradfriHub = 'coaps://{}:5684/15001' .format(hubip)
-    api = '{} -m get -u "{}" -k "{}" "{}" -B {} 2> /dev/null' .format(coap, apiuser, apikey,
-                                                                      tradfriHub, timeout)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return json.loads(result.decode().strip('\n').split('\n')[-1])
+    path = '/15001'
+    return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
 def tradfri_get_lightbulb(hubip, apiuser, apikey, deviceid):
     """ function for getting tradfri lightbulb information """
-    tradfriHub = 'coaps://{}:5684/15001/{}' .format(hubip, deviceid)
-    api = '{} -m get -u "{}" -k "{}" "{}" -B {} 2> /dev/null' .format(coap, apiuser, apikey,
-                                                                      tradfriHub, timeout)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return json.loads(result.decode().strip('\n').split('\n')[-1])
+    path = '/15001/{}'.format(deviceid)
+    return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
 def tradfri_get_groups(hubip, apiuser, apikey):
     """ function for getting tradfri groups """
-    tradfriHub = 'coaps://{}:5684/15004'.format(hubip)
-    api = '{} -m get -u "{}" -k "{}" "{}" -B {} 2> /dev/null' .format(coap, apiuser, apikey,
-                                                                      tradfriHub, timeout)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return json.loads(result.decode().strip('\n').split('\n')[-1])
+    path = '/15004'
+    return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
 def tradfri_get_group(hubip, apiuser, apikey, groupid):
     """ function for getting tradfri group information """
-    tradfriHub = 'coaps://{}:5684/15004/{}'.format(hubip, groupid)
-    api = '{} -m get -u "{}" -k "{}" "{}" -B {} 2> /dev/null' .format(coap, apiuser, apikey,
-                                                                      tradfriHub, timeout)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return json.loads(result.decode().strip('\n').split('\n')[-1])
+    path = '/15004/{}'.format(groupid)
+    return call_coap(hubip, apiuser, apikey, 'get', path, timeout)

@@ -27,44 +27,39 @@ from .tradfriStatus import tradfri_get_lightbulb
 
 coap = 'coap-client'
 
+def call_coap(hubip, apiuser, apikey, method, path, payload):
+    tradfriHub = 'coaps://{}:5684{}'.format(hubip, path)
+    command = '{} -m {} -u "{}" -k "{}" -e \'{}\' "{}"'.format(coap, method, apiuser, apikey, payload, tradfriHub)
+    return subprocess.check_output(command, shell=True)
+
+
 def tradfri_power_light(hubip, apiuser, apikey, lightbulbid, value):
     """ function for power on/off tradfri lightbulb """
-    tradfriHub = 'coaps://{}:5684/15001/{}' .format(hubip, lightbulbid)
+    path = '/15001/{}'.format(lightbulbid)
 
     if value == 'on':
         payload = '{ "3311": [{ "5850": 1 }] }'
     else:
         payload = '{ "3311": [{ "5850": 0 }] }'
 
-    api = '{} -m put -u "{}" -k "{}" -e \'{}\' "{}"' .format(coap, apiuser, apikey,
-                                                                          payload, tradfriHub)
-
-    subprocess.check_output(api, shell=True)
-
-    return True
-
+    return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
 def tradfri_dim_light(hubip, apiuser, apikey, lightbulbid, value):
     """ function for dimming tradfri lightbulb """
     dim = float(value) * 2.55
-    tradfriHub = 'coaps://{}:5684/15001/{}'.format(hubip, lightbulbid)
-    payload = '{ "3311" : [{ "5851" : %s }] }' % int(dim)
+    path = '/15001/{}'.format(lightbulbid)
+    payload = '{ "3311" : [{ "5851" : {} }] }'.format(int(dim))
 
-    api = '{} -m put -u "{}" -k "{}" -e \'{}\' "{}"'.format(coap, apiuser, apikey,
-                                                                         payload, tradfriHub)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return result
+    return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
 def tradfri_color_light(hubip, apiuser, apikey, lightbulbid, value):
     """ function for color temperature tradfri lightbulb """
-    tradfriHub = 'coaps://{}:5684/15001/{}'.format(hubip, lightbulbid)
+    path = '/15001/{}'.format(lightbulbid)
     payload = None
     colors = get_color_dict()
     
     if value in ['warm', 'normal', 'cold']:
-        payload = '{ "3311" : [{ "5706" : "%s"}] }' % (colors[value])
+        payload = '{ "3311" : [{ "5706" : "{}"}] }'.format(colors[value])
     
     if payload is None:
         color_supported = 'CWS' in tradfri_get_lightbulb(hubip, apiuser, apikey, lightbulbid)[u'3'][u'1']
@@ -73,54 +68,35 @@ def tradfri_color_light(hubip, apiuser, apikey, lightbulbid, value):
             print("Your lamp does not support colors.")
             sys.exit(1)
 
-    payload = '{ "3311" : [{ "5706" : "%s"}] }' % (colors[value])
+    payload = '{ "3311" : [{ "5706" : "{}"}] }'.format(colors[value])
 
-    api = '{} -m put -u "{}" -k "{}" -e \'{}\' "{}"'.format(coap, apiuser, apikey,
-                                                                         payload, tradfriHub)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return result
+    return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
 def tradfri_power_group(hubip, apiuser, apikey, groupid, value):
     """ function for power on/off tradfri lightbulb """
-    tradfriHub = 'coaps://{}:5684/15004/{}' .format(hubip, groupid)
+    path = '/15004/{}'.format(groupid)
 
     if value == 'on':
         payload = '{ "5850" : 1 }'
     else:
         payload = '{ "5850" : 0 }'
 
-    api = '{} -m put -u "{}" -k "{}" -e \'{}\' "{}"' .format(coap, apiuser, apikey,
-                                                                          payload, tradfriHub)
-
-    result = subprocess.check_output(api, shell=True)
-
-    return result
-
+    return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
 def tradfri_dim_group(hubip, apiuser, apikey, groupid, value):
     """ function for dimming tradfri lightbulb """
-    tradfriHub = 'coaps://{}:5684/15004/{}'.format(hubip, groupid)
+    path = '/15004/{}'.format(groupid)
     dim = float(value) * 2.55
-    payload = '{ "5851" : %s }' % int(dim)
+    payload = '{ "5851" : {} }'.format(int(dim))
 
-    api = '{} -m put -u "{}" -k "{}" -e \'{}\' "{}"'.format(coap, apiuser, apikey,
-                                                                         payload, tradfriHub)
+    return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
-    result = subprocess.check_output(api, shell=True)
-
-    return result
-
-def tradfri_authenticate(hubip, securitycode, apiuser = "TRADFRI_PY_API_" + str(random.randint(0, 1000)) ):
+def tradfri_authenticate(hubip, securitycode, apiuser = "TRADFRI_PY_API_{}".format(random.randint(0, 1000)) ):
     """ function for authenticating tradfri and getting apikey """
-    tradfriHub = 'coaps://{}:5684/15011/9063'.format(hubip)
-    payload = '{"9090":"' + apiuser + '"}'
+    path = '/15011/9063'
+    payload = '{"9090":"{}"}'.format(apiuser)
 
-    api = '{} -m post -u "Client_identity" -k "{}" -e \'{}\' "{}"'.format(coap, securitycode,
-                                                                         payload, tradfriHub)
-                                                                         
-    result = subprocess.check_output(api, shell=True)
+    result = call_coap(hubip, 'Client_identity', securitycode, 'post', path, payload)
 
     try:
         apikey = json.loads(result.decode().strip('\n').split('\n')[-1])["9091"]
