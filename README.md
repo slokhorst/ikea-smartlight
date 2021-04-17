@@ -16,8 +16,6 @@ make
 sudo make install
 ```
 
-the framework also requires `tqdm` for showing progressbars, you could strip it from the sourcecode or install the module for python: `pip install pip --upgrade && pip install tqdm`.
-
 ### authentication
 you will need to authenticate the api before you first use it. to do this, run `python tradfri-authenticate.py` and enter the ip of your hub and the security code (on the back of the hub). the script will automaticaly create a configuration file containing the api key
 

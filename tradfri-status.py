@@ -25,7 +25,6 @@ import time
 import configparser
 
 from tradfri import tradfriStatus
-from tqdm import tqdm
 
 def main():
     """ main function """
@@ -37,57 +36,38 @@ def main():
     apiuser = conf.get('tradfri', 'apiuser')
     apikey = conf.get('tradfri', 'apikey')
 
-    lightbulb = []
-    lightgroup = []
+    print('devices:')
+    for deviceid in tradfriStatus.tradfri_get_devices(hubip, apiuser, apikey):
+        time.sleep(0.5)
+        device = tradfriStatus.tradfri_get_lightbulb(hubip, apiuser, apikey, deviceid)
+        id = device["9003"]
+        name = device["9001"]
 
-    print('[ ] Tradfri: acquiring all Tradfri devices, please wait ...')
-    devices = tradfriStatus.tradfri_get_devices(hubip, apiuser, apikey)
-    groups = tradfriStatus.tradfri_get_groups(hubip, apiuser, apikey)
-
-    for deviceid in tqdm(range(len(devices)), desc='Tradfri devices', unit=' devices'):
-        lightbulb.append(tradfriStatus.tradfri_get_lightbulb(hubip, apiuser, apikey,
-                                                             str(devices[deviceid])))
-
-    # sometimes the request are to fast, the will decline the request (flood security)
-    # in this case you could increse the sleep timer
-    time.sleep(.5)
-
-    for groupid in tqdm(range(len(groups)), desc='Tradfri groups', unit=' group'):
-        lightgroup.append(tradfriStatus.tradfri_get_group(hubip, apiuser, apikey,
-                                                          str(groups[groupid])))
-
-    print('[+] Tradfri: device information gathered')
-    print('===========================================================\n')
-    for _ in range(len(lightbulb)):
-        try:
-            brightness = lightbulb[_]["3311"][0]["5851"]
-            try:
-                warmth     = float(lightbulb[_]["3311"][0]["5711"])
-                warmth     = round((warmth-250)/(454-250)*100,1)# reported as a percentage (100% maximum warmth)
-            except KeyError:
-                warmth = "NAN"
-
-            if lightbulb[_]["3311"][0]["5850"] == 0:
-                print('bulb ID {0:<5}, name: {1: <35}, brightness: {2: <3}, warmth: {3: >5}%, state: off'
-                      .format(lightbulb[_]["9003"], lightbulb[_]["9001"],
-                              brightness,warmth))
+        if "3311" in device:
+            bulb = device["3311"][0]
+            brightness = bulb["5851"]
+            state = bulb["5850"]
+            state = {0: 'off', 1: 'on'}[state]
+            if "5711" in bulb:
+                warmth = float(bulb["5711"])
+                warmth = round((warmth-250)/(454-250)*100,1)# reported as a percentage (100% maximum warmth)
             else:
-                print('bulb ID {0:<5}, name: {1: <35}, brightness: {2: <3}, warmth: {3: >5}%, state: on'
-                      .format(lightbulb[_]["9003"], lightbulb[_]["9001"],
-                              brightness,warmth))
-        except KeyError:
-            # device is not a lightbulb but a remote control, dimmer or sensor
-            pass
-
+                warmth = "N/A"
+            print('ID: {0:<5}, name: {1: <35}, brightness: {2: <3}, warmth: {3: >5}%, state: {4}'.format(id, name, brightness, warmth, state))
+        else:
+            print('ID: {0:<5}, name: {1: <35}'.format(id, name))
     print('\n')
 
-    for _ in range(len(lightgroup)):
-        if lightgroup[_]["5850"] == 0:
-            print('group ID: {0:<5}, name: {1: <16}, state: off'
-                  .format(lightgroup[_]["9003"], lightgroup[_]["9001"]))
-        else:
-            print('group ID: {0:<5}, name: {1: <16}, state: on'
-                  .format(lightgroup[_]["9003"], lightgroup[_]["9001"]))
+    print('groups:')
+    for groupid in tradfriStatus.tradfri_get_groups(hubip, apiuser, apikey):
+        time.sleep(0.5)
+        group = tradfriStatus.tradfri_get_group(hubip, apiuser, apikey, groupid)
+        id = group["9003"]
+        name = group["9001"]
+        state = group["5850"]
+        state = {0: 'off', 1: 'on'}[state]
+        print('ID: {0:<5}, name: {1: <16}, state: {2}'.format(id, name, state))
+    print('\n')
 
 if __name__ == "__main__":
     main()
