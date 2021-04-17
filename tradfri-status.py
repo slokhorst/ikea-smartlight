@@ -39,7 +39,7 @@ def main():
     print('devices:')
     for deviceid in tradfriStatus.tradfri_get_devices(hubip, apiuser, apikey):
         time.sleep(0.5)
-        device = tradfriStatus.tradfri_get_lightbulb(hubip, apiuser, apikey, deviceid)
+        device = tradfriStatus.tradfri_get_device(hubip, apiuser, apikey, deviceid)
         id = device["9003"]
         name = device["9001"]
 

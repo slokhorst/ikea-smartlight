@@ -23,7 +23,7 @@ import sys
 import json
 import random
 import subprocess
-from .tradfriStatus import tradfri_get_lightbulb
+from .tradfriStatus import tradfri_get_device
 
 coap = 'coap-client'
 
@@ -62,7 +62,7 @@ def tradfri_color_light(hubip, apiuser, apikey, lightbulbid, value):
         payload = '{ "3311" : [{ "5706" : "{}"}] }'.format(colors[value])
     
     if payload is None:
-        color_supported = 'CWS' in tradfri_get_lightbulb(hubip, apiuser, apikey, lightbulbid)[u'3'][u'1']
+        color_supported = 'CWS' in tradfri_get_device(hubip, apiuser, apikey, lightbulbid)[u'3'][u'1']
 
         if not color_supported:
             print("Your lamp does not support colors.")

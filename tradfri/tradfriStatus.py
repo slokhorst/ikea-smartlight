@@ -37,13 +37,13 @@ def tradfri_get_devices(hubip, apiuser, apikey):
     path = '/15001'
     return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
-def tradfri_get_lightbulb(hubip, apiuser, apikey, deviceid):
-    """ function for getting tradfri lightbulb information """
+def tradfri_get_device(hubip, apiuser, apikey, deviceid):
+    """ function for getting tradfri device information """
     path = '/15001/{}'.format(deviceid)
     return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
 def tradfri_get_groups(hubip, apiuser, apikey):
-    """ function for getting tradfri groups """
+    """ function for getting tradfri group ids """
     path = '/15004'
     return call_coap(hubip, apiuser, apikey, 'get', path, timeout)
 
