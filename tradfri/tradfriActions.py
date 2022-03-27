@@ -38,9 +38,9 @@ def tradfri_power_light(hubip, apiuser, apikey, lightbulbid, value):
     path = '/15001/{}'.format(lightbulbid)
 
     if value == 'on':
-        payload = '{ "3311": [{ "5850": 1 }] }'
+        payload = json.dumps({ "3311": [{ "5850": 1 }] })
     else:
-        payload = '{ "3311": [{ "5850": 0 }] }'
+        payload = json.dumps({ "3311": [{ "5850": 0 }] })
 
     return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
@@ -48,7 +48,7 @@ def tradfri_dim_light(hubip, apiuser, apikey, lightbulbid, value):
     """ function for dimming tradfri lightbulb """
     dim = float(value) * 2.55
     path = '/15001/{}'.format(lightbulbid)
-    payload = '{ "3311" : [{ "5851" : {} }] }'.format(int(dim))
+    payload = json.dumps({ "3311" : [{ "5851" : int(dim) }] })
 
     return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
@@ -59,7 +59,7 @@ def tradfri_color_light(hubip, apiuser, apikey, lightbulbid, value):
     colors = get_color_dict()
     
     if value in ['warm', 'normal', 'cold']:
-        payload = '{ "3311" : [{ "5706" : "{}"}] }'.format(colors[value])
+        payload = json.dumps({ "3311" : [{ "5706" : colors[value]}] })
     
     if payload is None:
         color_supported = 'CWS' in tradfri_get_device(hubip, apiuser, apikey, lightbulbid)[u'3'][u'1']
@@ -68,7 +68,7 @@ def tradfri_color_light(hubip, apiuser, apikey, lightbulbid, value):
             print("Your lamp does not support colors.")
             sys.exit(1)
 
-    payload = '{ "3311" : [{ "5706" : "{}"}] }'.format(colors[value])
+    payload = json.dumps({ "3311" : [{ "5706" : colors[value]}] })
 
     return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
@@ -77,9 +77,9 @@ def tradfri_power_group(hubip, apiuser, apikey, groupid, value):
     path = '/15004/{}'.format(groupid)
 
     if value == 'on':
-        payload = '{ "5850" : 1 }'
+        payload = json.dumps({ "5850" : 1 })
     else:
-        payload = '{ "5850" : 0 }'
+        payload = json.dumps({ "5850" : 0 })
 
     return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
@@ -87,14 +87,14 @@ def tradfri_dim_group(hubip, apiuser, apikey, groupid, value):
     """ function for dimming tradfri lightbulb """
     path = '/15004/{}'.format(groupid)
     dim = float(value) * 2.55
-    payload = '{ "5851" : {} }'.format(int(dim))
+    payload = json.dumps({ "5851" : int(dim) })
 
     return call_coap(hubip, apiuser, apikey, 'put', path, payload)
 
 def tradfri_authenticate(hubip, securitycode, apiuser = "TRADFRI_PY_API_{}".format(random.randint(0, 1000)) ):
     """ function for authenticating tradfri and getting apikey """
     path = '/15011/9063'
-    payload = '{"9090":"{}"}'.format(apiuser)
+    payload = json.dumps({"9090": apiuser})
 
     result = call_coap(hubip, 'Client_identity', securitycode, 'post', path, payload)
 
